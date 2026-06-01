@@ -17,8 +17,27 @@
  * @author [Neeraj Cherkara](https://github.com/iamnambiar)
  */
 #include <cassert>   /// for assert
-#include <cmath>     /// for std::pow
+#include <climits>   /// for INT_MAX
 #include <iostream>  /// for IO operations
+
+/**
+ * @brief Fast integer power function using exponentiation by squaring.
+ * Eliminates costly floating-point overhead of std::pow.
+ * @param base The base number.
+ * @param exp The exponent.
+ * @return base raised to the power of exp.
+ */
+inline int ipow(int base, int exp) {
+    int result = 1;
+    while (exp > 0) {
+        if (exp & 1) {
+            result *= base;
+        }
+        base *= base;
+        exp >>= 1;
+    }
+    return result;
+}
 
 /**
  * @brief Function to calculate the total number of digits in the number.
@@ -26,6 +45,9 @@
  * @return Total number of digits.
  */
 int number_of_digits(int num) {
+    if (num == 0) {
+        return 1;
+    }
     int total_digits = 0;
     while (num > 0) {
         num = num / 10;
@@ -46,15 +68,27 @@ bool is_armstrong(int number) {
         return false;
     }
 
+    int total_digits = number_of_digits(number);
+    
+    // Single-digit numbers (0-9) are always Armstrong numbers.
+    if (total_digits == 1) {
+        return true;
+    }
+
     int sum = 0;
     int temp = number;
-    // Finding the total number of digits in the number
-    int total_digits = number_of_digits(number);
+    
     while (temp > 0) {
         int rem = temp % 10;
-        // Finding each digit raised to the power total digit and add it to the
-        // total sum
-        sum += static_cast<int>(std::pow(rem, total_digits));
+        
+        int power_val = ipow(rem, total_digits);
+        
+        // Prevent potential integer overflow
+        if (sum > INT_MAX - power_val) {
+            return false;
+        }
+        
+        sum += power_val;
         temp = temp / 10;
     }
     return number == sum;
